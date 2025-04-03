@@ -1,0 +1,55 @@
+name: Serverless Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to deploy"
+        required: true
+        default: "main"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Change to Root Directory
+        run: cd /
+
+      - name: Start Docker Daemon
+        run: |
+          nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
+          timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Serverless Framework and Plugins
+        run: |
+          npm install -g serverless@3.35.2
+          serverless plugin install -n serverless-dotenv-plugin 
+          serverless plugin install -n serverless-python-requirements 
+          serverless plugin install -n serverless-plugin-log-retention 
+          serverless plugin install -n serverless-prune-plugin 
+          serverless plugin install -n serverless-step-functions 
+          serverless plugin install -n serverless-plugin-split-stacks
+          serverless plugin install -n serverless-plugin-aws-alerts
+          serverless plugin install -n serverless-plugin-tracing
+          npm install --save-dev serverless-dotenv-plugin
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy Serverless Application
+        run: serverless deploy --stage test --verbose --force
