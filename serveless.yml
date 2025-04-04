@@ -1,0 +1,38 @@
+service: sentiment-analysis
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - comprehend:DetectSentiment
+            - s3:GetObject
+            - s3:PutObject
+          Resource: "*"
+  environment:
+    BUCKET_NAME: ${self:service}-${sls:stage}-bucket
+    INPUT_FILE: sentimentdataset_org.csv
+    OUTPUT_FILE: sentiment-results.csv
+
+functions:
+  analyzeSentiment:
+    handler: handler.analyze
+    timeout: 30
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+resources:
+  Resources:
+    SentimentAnalysisBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.BUCKET_NAME}
