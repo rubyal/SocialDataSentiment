@@ -3,15 +3,15 @@ name: Deploy Sentiment Analysis to AWS
 on:
   push:
     branches:
-      - master  # o la rama que estés usando
+      - master  # o la rama que estás usando
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3  # 👈 Esto es crucial
+      - name: Checkout repo  # 👈 ESTE PASO ES OBLIGATORIO
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v5
