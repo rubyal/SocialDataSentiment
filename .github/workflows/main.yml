@@ -3,14 +3,14 @@ name: Deploy Sentiment Analysis to AWS
 on:
   push:
     branches:
-      - master  # o la rama que estás usando
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo  # 👈 ESTE PASO ES OBLIGATORIO
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -31,6 +31,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
+      - name: Show current directory and contents
+        run: |
+          pwd
+          ls -la
+
       - name: Deploy with Serverless
         run: sls deploy --stage prod
-        working-directory: ./
