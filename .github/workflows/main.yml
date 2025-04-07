@@ -33,3 +33,4 @@ jobs:
 
       - name: Deploy with Serverless
         run: sls deploy --stage prod
+        working-directory: ./
