@@ -32,4 +32,4 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy with Serverless
-        run: serverless deploy --stage test --verbose --force
+        run: sls deploy --stage prod
