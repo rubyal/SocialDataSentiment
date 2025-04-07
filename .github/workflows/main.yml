@@ -1,51 +1,31 @@
-name: Serverless Deployment
+name: Deploy Sentiment Analysis to AWS
 
 on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to deploy"
-        required: true
-        default: "master"
+  push:
+    branches:
+      - master  # o la rama que estés usando
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.inputs.branch }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Serverless Framework and Plugins
-        run: |
-          npm install -g serverless@3.35.2
-          npm install --save-dev serverless-dotenv-plugin
-          serverless plugin install -n serverless-dotenv-plugin 
-          serverless plugin install -n serverless-python-requirements 
-          serverless plugin install -n serverless-plugin-log-retention 
-          serverless plugin install -n serverless-prune-plugin 
-          serverless plugin install -n serverless-step-functions 
-          serverless plugin install -n serverless-plugin-split-stacks
-          serverless plugin install -n serverless-plugin-aws-alerts
-          serverless plugin install -n serverless-plugin-tracing
-
-      - name: Set up Python (for serverless-python-requirements)
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      - name: Install Serverless Framework
+        run: npm install -g serverless
+
       - name: Install Python dependencies
-        if: exists('requirements.txt')
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
+
+      - name: Install Serverless plugins
+        run: npm install
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -54,5 +34,5 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy Serverless Application
+      - name: Deploy with Serverless
         run: serverless deploy --stage test --verbose --force
